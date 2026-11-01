@@ -216,12 +216,14 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
 
   device_specific.FullOTA_InstallBegin()
 
-  CopyInstallTools(output_zip)
-  script.UnpackPackageDir("install", "/tmp/install")
-  script.SetPermissionsRecursive("/tmp/install", 0, 0, 0o755, 0o644, None, None)
-  script.SetPermissionsRecursive("/tmp/install/bin", 0, 0, 0o755, 0o755, None, None)
+  has_install_tools = os.path.isdir(os.path.join(OPTIONS.input_tmp, "INSTALL"))
+  if has_install_tools:
+    CopyInstallTools(output_zip)
+    script.UnpackPackageDir("install", "/tmp/install")
+    script.SetPermissionsRecursive("/tmp/install", 0, 0, 0o755, 0o644, None, None)
+    script.SetPermissionsRecursive("/tmp/install/bin", 0, 0, 0o755, 0o755, None, None)
 
-  if OPTIONS.backuptool:
+  if OPTIONS.backuptool and has_install_tools:
     script.RunBackup("backup", target_info.get('use_dynamic_partitions') == "true")
 
   # All other partitions as well as the data wipe use 10% of the progress, and
@@ -263,7 +265,7 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
   common.CheckSize(boot_img.data, "boot.img", target_info)
   common.ZipWriteStr(output_zip, "boot.img", boot_img.data)
 
-  if OPTIONS.backuptool:
+  if OPTIONS.backuptool and has_install_tools:
     script.ShowProgress(0.02, 10)
     script.RunBackup("restore", target_info.get('use_dynamic_partitions') == "true")
 
