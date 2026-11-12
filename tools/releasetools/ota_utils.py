@@ -290,6 +290,9 @@ def GetPackageMetadata(target_info, source_info=None):
   UpdateDeviceState(metadata_proto.postcondition, target_info,
                     boot_variable_values, True)
 
+  metadata_proto.property_files['ota-id'] = target_info.GetBuildProp(
+      'ro.ota.id')
+
   if target_info.is_ab and not OPTIONS.force_non_ab:
     metadata_proto.type = ota_metadata_pb2.OtaMetadata.AB
     metadata_proto.required_cache = 0

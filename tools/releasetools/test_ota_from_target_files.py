@@ -131,7 +131,8 @@ class OtaFromTargetFilesTest(test_utils.ReleaseToolsTestCase):
               'ro.build.version.incremental': 'build-version-incremental-target',
               'ro.build.version.sdk': '27',
               'ro.build.version.security_patch': '2017-12-01',
-              'ro.build.date.utc': '1500000000'}
+              'ro.build.date.utc': '1500000000',
+              'ro.ota.id': 'ota-id-target'}
       )
   }
 
@@ -143,7 +144,8 @@ class OtaFromTargetFilesTest(test_utils.ReleaseToolsTestCase):
               'ro.build.version.incremental': 'build-version-incremental-source',
               'ro.build.version.sdk': '25',
               'ro.build.version.security_patch': '2016-12-01',
-              'ro.build.date.utc': '1400000000'}
+              'ro.build.date.utc': '1400000000',
+              'ro.ota.id': 'ota-id-source'}
       )
   }
 
@@ -209,6 +211,7 @@ class OtaFromTargetFilesTest(test_utils.ReleaseToolsTestCase):
     self.assertDictEqual(
         {
             'ota-type': 'AB',
+            'ota-id': 'ota-id-target',
             'ota-required-cache': '0',
             'post-build': 'build-fingerprint-target',
             'post-build-incremental': 'build-version-incremental-target',
@@ -218,6 +221,13 @@ class OtaFromTargetFilesTest(test_utils.ReleaseToolsTestCase):
             'pre-device': 'product-device',
         },
         metadata)
+
+  def test_GetPackageMetadata_missingOtaId(self):
+    target_info_dict = copy.deepcopy(self.TEST_TARGET_INFO_DICT)
+    del target_info_dict['build.prop'].build_props['ro.ota.id']
+    target_info = common.BuildInfo(target_info_dict, None)
+    self.assertRaises(common.ExternalError, self.GetLegacyOtaMetadata,
+                      target_info)
 
   def test_GetPackageMetadata_abOta_incremental(self):
     target_info_dict = copy.deepcopy(self.TEST_TARGET_INFO_DICT)
@@ -230,6 +240,7 @@ class OtaFromTargetFilesTest(test_utils.ReleaseToolsTestCase):
     self.assertDictEqual(
         {
             'ota-type': 'AB',
+            'ota-id': 'ota-id-target',
             'ota-required-cache': '0',
             'post-build': 'build-fingerprint-target',
             'post-build-incremental': 'build-version-incremental-target',
@@ -248,6 +259,7 @@ class OtaFromTargetFilesTest(test_utils.ReleaseToolsTestCase):
     self.assertDictEqual(
         {
             'ota-type': 'BLOCK',
+            'ota-id': 'ota-id-target',
             'ota-required-cache': '0',
             'post-build': 'build-fingerprint-target',
             'post-build-incremental': 'build-version-incremental-target',
@@ -266,6 +278,7 @@ class OtaFromTargetFilesTest(test_utils.ReleaseToolsTestCase):
     self.assertDictEqual(
         {
             'ota-type': 'BLOCK',
+            'ota-id': 'ota-id-target',
             'ota-required-cache': '0',
             'post-build': 'build-fingerprint-target',
             'post-build-incremental': 'build-version-incremental-target',
@@ -285,6 +298,7 @@ class OtaFromTargetFilesTest(test_utils.ReleaseToolsTestCase):
     self.assertDictEqual(
         {
             'ota-type': 'BLOCK',
+            'ota-id': 'ota-id-target',
             'ota-required-cache': '0',
             'ota-wipe': 'yes',
             'post-build': 'build-fingerprint-target',
@@ -348,6 +362,7 @@ class OtaFromTargetFilesTest(test_utils.ReleaseToolsTestCase):
         {
             'ota-retrofit-dynamic-partitions': 'yes',
             'ota-type': 'BLOCK',
+            'ota-id': 'ota-id-target',
             'ota-required-cache': '0',
             'post-build': 'build-fingerprint-target',
             'post-build-incremental': 'build-version-incremental-target',
@@ -422,6 +437,7 @@ class OtaFromTargetFilesTest(test_utils.ReleaseToolsTestCase):
         {
             'ota-downgrade': 'yes',
             'ota-type': 'BLOCK',
+            'ota-id': 'ota-id-target',
             'ota-required-cache': '0',
             'ota-wipe': 'yes',
             'post-build': 'build-fingerprint-target',
@@ -462,6 +478,7 @@ class OtaFromTargetFilesTest(test_utils.ReleaseToolsTestCase):
         {
             'ota-downgrade': 'yes',
             'ota-type': 'AB',
+            'ota-id': 'ota-id-target',
             'ota-required-cache': '0',
             'ota-wipe': 'yes',
             'post-build': 'build-fingerprint-target',
@@ -1473,6 +1490,7 @@ class RuntimeFingerprintTest(test_utils.ReleaseToolsTestCase):
       'ro.build.version.sdk=30',
       'ro.build.version.security_patch=2020',
       'ro.build.date.utc=12345678',
+      'ro.ota.id=0123456789abcdef',
       'ro.system.build.version.release=version-release',
       'ro.system.build.id=build-id',
       'ro.system.build.version.incremental=version-incremental',
@@ -1633,6 +1651,7 @@ class RuntimeFingerprintTest(test_utils.ReleaseToolsTestCase):
     build_info = common.BuildInfo(common.LoadInfoDict(self.test_dir))
     metadata_dict = BuildLegacyOtaMetadata(GetPackageMetadata(build_info))
     self.assertEqual('vendor-product-device', metadata_dict['pre-device'])
+    self.assertEqual('0123456789abcdef', metadata_dict['ota-id'])
     fingerprints = [
         self.constructFingerprint(
             'vendor-product-brand/vendor-product-name/vendor-product-device'),
