@@ -226,8 +226,8 @@ class OtaFromTargetFilesTest(test_utils.ReleaseToolsTestCase):
     target_info_dict = copy.deepcopy(self.TEST_TARGET_INFO_DICT)
     del target_info_dict['build.prop'].build_props['ro.ota.id']
     target_info = common.BuildInfo(target_info_dict, None)
-    self.assertRaises(common.ExternalError, self.GetLegacyOtaMetadata,
-                      target_info)
+    metadata = self.GetLegacyOtaMetadata(target_info)
+    self.assertNotIn('ota-id', metadata)
 
   def test_GetPackageMetadata_abOta_incremental(self):
     target_info_dict = copy.deepcopy(self.TEST_TARGET_INFO_DICT)
